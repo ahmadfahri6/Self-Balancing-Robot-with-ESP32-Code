@@ -1,0 +1,69 @@
+#include <Wire.h>
+#include <MPU6050.h>
+
+MPU6050 mpu;
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+
+  Serial.println("Memulai kalibrasi MPU6050...");
+  mpu.initialize();
+
+  if (!mpu.testConnection()) {
+    Serial.println("Gagal terhubung dengan MPU6050");
+    while (1);
+  }
+
+  delay(1000);  // Beri waktu MPU stabil
+
+  Serial.println("Pastikan sensor dalam keadaan diam dan datar!");
+  delay(3000);
+
+  Serial.println("Mengambil nilai rata-rata offset, mohon tunggu...");
+
+  int16_t ax, ay, az, gx, gy, gz;
+  long ax_offset = 0, ay_offset = 0, az_offset = 0;
+  long gx_offset = 0, gy_offset = 0, gz_offset = 0;
+
+  int samples = 1000;
+
+  for (int i = 0; i < samples; i++) {
+    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    ax_offset += ax;
+    ay_offset += ay;
+    az_offset += az;
+    gx_offset += gx;
+    gy_offset += gy;
+    gz_offset += gz;
+    delay(2);
+  }
+
+  ax_offset /= samples;
+  ay_offset /= samples;
+  az_offset = (az_offset / samples) - 16384;  // 1G = 16384 untuk aksel
+  gx_offset /= samples;
+  gy_offset /= samples;
+  gz_offset /= samples;
+
+  Serial.println("\n===== NILAI OFFSET MPU6050 =====");
+  Serial.print("Accel X Offset: "); Serial.println(ax_offset);
+  Serial.print("Accel Y Offset: "); Serial.println(ay_offset);
+  Serial.print("Accel Z Offset: "); Serial.println(az_offset);
+  Serial.print("Gyro X Offset : "); Serial.println(gx_offset);
+  Serial.print("Gyro Y Offset : "); Serial.println(gy_offset);
+  Serial.print("Gyro Z Offset : "); Serial.println(gz_offset);
+  Serial.println("================================");
+
+  Serial.println("\nMasukkan nilai-nilai di atas ke dalam kode kamu seperti ini:");
+  Serial.println("mpu.setXAccelOffset(...);");
+  Serial.println("mpu.setYAccelOffset(...);");
+  Serial.println("mpu.setZAccelOffset(...);");
+  Serial.println("mpu.setXGyroOffset(...);");
+  Serial.println("mpu.setYGyroOffset(...);");
+  Serial.println("mpu.setZGyroOffset(...);");
+}
+
+void loop() {
+  // Kosong karena hanya kalibrasi sekali saat setup
+}
